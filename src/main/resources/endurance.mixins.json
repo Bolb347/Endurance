@@ -1,0 +1,17 @@
+{
+	"required": true,
+	"package": "blob.endurance.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"ExampleMixin",
+		"GameRendererMixin",
+		"WorldRendererMixin",
+		"EntityMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

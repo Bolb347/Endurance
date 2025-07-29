@@ -1,0 +1,17 @@
+{
+  "vertex": "veil:blit_screen",
+  "fragment": "endurance:planet",
+  "transparent": false,
+  "textures": {
+    "PlanetTexture0": "endurance:textures/planets/sun.png",
+    "PlanetTexture1": "endurance:textures/planets/mercury.png",
+    "PlanetTexture2": "endurance:textures/planets/venus.png",
+    "PlanetTexture3": "endurance:textures/planets/earth.png",
+    "PlanetTexture4": "endurance:textures/planets/mars.png",
+    "PlanetTexture5": "endurance:textures/planets/jupiter.png",
+    "PlanetTexture6": "endurance:textures/planets/saturn.png",
+    "PlanetTexture7": "endurance:textures/planets/uranus.png",
+    "PlanetTexture8": "endurance:textures/planets/neptune.png",
+    "PlanetTexture9": "endurance:textures/planets/pluto.png"
+  }
+}
