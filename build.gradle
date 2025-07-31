@@ -52,6 +52,11 @@ dependencies {
 	implementation("org.valkyrienskies.core:api-game:$vs_core_version") { transitive = false }
 	implementation("org.valkyrienskies.core:util:$vs_core_version") { transitive = false }
 	implementation("org.valkyrienskies.core:impl:$vs_core_version") { transitive = false }
+	modApi("org.valkyrienskies:valkyrienskies-1-21-1-fabric:${vs2_version}") {
+		exclude group: 'com.simibubi', module: ''
+		exclude group: 'dev.engine-room', module: ''
+		exclude group: 'com.jozufozu', module: ''
+	}
 	modImplementation("foundry.veil:veil-fabric-1.21.1:2.2.0")
 	implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.10"
 	implementation "org.jetbrains.kotlin:kotlin-reflect:1.9.0"

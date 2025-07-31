@@ -1,8 +1,11 @@
 package blob.endurance;
 
+import blob.endurance.Block.ModBlocks;
+import blob.endurance.Item.ModItems;
 import blob.endurance.entities.ModEntities;
 import net.fabricmc.api.ModInitializer;
 
+import net.minecraft.util.math.BlockPos;
 import org.joml.Vector3f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,11 +21,15 @@ public class Endurance implements ModInitializer {
 	public static Vector3f shipPrevPos = new Vector3f(0, 0, 0);
 	public static Vector3f shipRot = new Vector3f(0, 0, 0);
 	public static Vector3f shipVel = new Vector3f(0, 0, 0);
+	public static float THRUSTER_POWER = 10;
+	public static BlockPos INV_POS = new BlockPos(0, -10000, 0);
 
 
 	@Override
 	public void onInitialize() {
 		ModEntities.register();
+		ModBlocks.register();
+		ModItems.register();
 		// This code runs as soon as Minecraft is in a mod-load-ready state.
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
