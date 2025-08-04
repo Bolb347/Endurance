@@ -21,7 +21,7 @@ public class Endurance implements ModInitializer {
 	public static Vector3f shipPrevPos = new Vector3f(0, 0, 0);
 	public static Vector3f shipRot = new Vector3f(0, 0, 0);
 	public static Vector3f shipVel = new Vector3f(0, 0, 0);
-	public static float THRUSTER_POWER = 4;
+	public static float THRUSTER_POWER = 40000;
 	public static int THRUSTER_MAX_SPEED = 200;
 	public static BlockPos INV_POS = new BlockPos(0, -10000, 0);
 
