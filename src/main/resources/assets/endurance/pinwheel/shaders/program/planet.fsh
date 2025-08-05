@@ -16,6 +16,8 @@ layout(std140) uniform CameraMatrices {
     float FarPlane;
 } VeilCamera;
 
+#define PI 3.14159265
+
 uniform sampler2D PlanetTexture0;
 uniform sampler2D PlanetTexture1;
 uniform sampler2D PlanetTexture2;
@@ -32,18 +34,14 @@ uniform sampler2D PlanetTexture9;
 uniform vec3 WorldPos[PLANET_COUNT];
 uniform float Radius[PLANET_COUNT];
 uniform float Rotation[PLANET_COUNT];
-uniform float AuraStength[PLANET_COUNT];
-uniform float AuraFalloff[PLANET_COUNT];
+uniform float AuraStrength[PLANET_COUNT];  // Glow intensity multiplier
+uniform float AuraFalloff[PLANET_COUNT];   // How quickly aura fades
+uniform vec3 AtmoColors[PLANET_COUNT];
 uniform vec3 SunPos;
-uniform vec3 ShipRot;
 
-const float PI = 3.14159265;
 const float EPSILON = 1e-4;
 
-const vec3 RAYLEIGH_SCATTER = vec3(0.005, 0.015, 0.035);
-const vec3 MIE_SCATTER = vec3(0.004);
-const float MIE_G = 0.5;
-
+// Ray-sphere intersection
 bool raySphereIntersect(vec3 rayOrigin, vec3 rayDir, vec3 center, float radius, out float tNear, out float tFar) {
     vec3 oc = rayOrigin - center;
     float b = dot(oc, rayDir);
@@ -67,15 +65,6 @@ vec3 getWorldRay(vec2 uv) {
     return normalize(worldDir);
 }
 
-float rayleighPhase(float cosTheta) {
-    return (3.0 / (16.0 * PI)) * (1.0 + cosTheta * cosTheta);
-}
-
-float hgPhase(float cosTheta, float g) {
-    float g2 = g * g;
-    return (1.0 / (4.0 * PI)) * ((1.0 - g2) / pow(1.0 + g2 - 2.0 * g * cosTheta, 1.5));
-}
-
 vec3 samplePlanetTexture(int index, vec2 uv) {
     if (index == 0) return texture(PlanetTexture0, uv).rgb;
     else if (index == 1) return texture(PlanetTexture1, uv).rgb;
@@ -89,55 +78,21 @@ vec3 samplePlanetTexture(int index, vec2 uv) {
     else if (index == 9) return texture(PlanetTexture9, uv).rgb;
     else return vec3(0.0);
 }
-
-// Rotation matrix with Y (yaw) * X (pitch) * Z (roll) order
-mat3 rotationMatrixYXZ(vec3 rot) {
-    float cx = cos(rot.x);
-    float sx = sin(rot.x);
-    float cy = cos(rot.y);
-    float sy = sin(rot.y);
-    float cz = cos(rot.z);
-    float sz = sin(rot.z);
-
-    mat3 rotX = mat3(
-    1, 0, 0,
-    0, cx, -sx,
-    0, sx, cx
-    );
-
-    mat3 rotY = mat3(
-    cy, 0, sy,
-    0, 1, 0,
-    -sy, 0, cy
-    );
-
-    mat3 rotZ = mat3(
-    cz, -sz, 0,
-    sz, cz, 0,
-    0, 0, 1
-    );
-
-    return rotY * rotX * rotZ;
+// Rayleigh phase function
+float rayleighPhase(float cosTheta) {
+    return 0.75 * (1.0 + cosTheta * cosTheta);
 }
 
-vec3 applyShipTransform(vec3 planetWorldPos, vec3 shipRot) {
-    // Inverse rotation matrix is transpose since orthonormal
-    mat3 rot = rotationMatrixYXZ(shipRot);
-    mat3 invRot = transpose(rot);
-
-    return invRot * planetWorldPos;
+// Henyey-Greenstein phase function for Mie scattering
+float miePhase(float cosTheta, float g) {
+    float g2 = g * g;
+    float denom = pow(1.0 + g2 - 2.0 * g * cosTheta, 1.5);
+    return (1.0 - g2) / (4.0 * PI * denom);
 }
 
 void main() {
-    vec3 worldRayOrigin = VeilCamera.CameraPosition;
-    vec3 worldRayDir = getWorldRay(texCoord);
-
-    // Apply inverse ship transform to ray origin and direction
-    mat3 rot = rotationMatrixYXZ(ShipRot);
-    mat3 invRot = transpose(rot);
-
-    vec3 rayOrigin = invRot * worldRayOrigin;
-    vec3 rayDir = normalize(invRot * worldRayDir);
+    vec3 rayOrigin = VeilCamera.CameraPosition;
+    vec3 rayDir = getWorldRay(texCoord);
 
     vec4 bgColor = texture(DiffuseSampler0, texCoord);
     vec3 finalColor = bgColor.rgb;
@@ -146,85 +101,128 @@ void main() {
     int closestPlanetIndex = -1;
 
     for (int i = 0; i < PLANET_COUNT; ++i) {
-        vec3 transformedPlanetPos = applyShipTransform(WorldPos[i], ShipRot);
         float tNear, tFar;
-        if (raySphereIntersect(rayOrigin, rayDir, transformedPlanetPos, Radius[i], tNear, tFar)) {
+        if (raySphereIntersect(rayOrigin, rayDir, WorldPos[i], Radius[i], tNear, tFar)) {
             if (tNear < closestT) {
                 closestT = tNear;
                 closestPlanetIndex = i;
             }
         }
     }
-
     if (closestPlanetIndex != -1) {
-        vec3 planetWorldPos = WorldPos[closestPlanetIndex];
+        vec3 planetCenter = WorldPos[closestPlanetIndex];
         float radius = Radius[closestPlanetIndex];
         float rotation = Rotation[closestPlanetIndex];
 
-        vec3 transformedPlanetPos = applyShipTransform(planetWorldPos, ShipRot);
         vec3 hitPoint = rayOrigin + rayDir * closestT;
-        vec3 normalLocal = normalize(hitPoint - transformedPlanetPos);
+        vec3 normalWorld = normalize(hitPoint - planetCenter);
 
-        // Normal back to world space
-        vec3 normalWorld = rot * normalLocal;
-
-        // Rotate normal by planet rotation around Y axis
         float cosR = cos(rotation);
         float sinR = sin(rotation);
-
         vec3 rotatedNormal = vec3(
-        cosR * normalWorld.x + sinR * normalWorld.z,
-        normalWorld.y,
-        -sinR * normalWorld.x + cosR * normalWorld.z
+            cosR * normalWorld.x + sinR * normalWorld.z,
+            normalWorld.y,
+            -sinR * normalWorld.x + cosR * normalWorld.z
         );
 
-        // Spherical UV mapping
         float u = 0.5 + atan(rotatedNormal.x, rotatedNormal.z) / (2.0 * PI);
         float v = 0.5 - asin(clamp(rotatedNormal.y, -1.0, 1.0)) / PI;
         v = clamp(v, 0.0, 1.0);
-
         vec2 sphereUV = vec2(fract(u), v);
 
         finalColor = samplePlanetTexture(closestPlanetIndex, sphereUV);
-    } else {
-        vec3 accumulatedGlow = vec3(0.0);
+    }
 
-        for (int i = 0; i < PLANET_COUNT; ++i) {
-            vec3 transformedPlanetPos = applyShipTransform(WorldPos[i], ShipRot);
-            vec3 planetCenter = transformedPlanetPos;
-            float radius = Radius[i];
-
-            vec3 toCenter = planetCenter - rayOrigin;
-            float t = dot(toCenter, rayDir);
-            if (t <= 0.0) continue;
-
-            vec3 closestPoint = rayOrigin + rayDir * t;
-            float distToCenter = length(planetCenter - closestPoint);
-            float distToSurface = max(0.0, distToCenter - radius);
-
-            float glowStrength = exp(-AuraFalloff[i] * distToSurface) * AuraStength[i];
-
-            vec3 lightDir = normalize(SunPos - planetCenter);
-            float mu = dot(rayDir, lightDir);
-            float muClamped = clamp(mu, -1.0, 1.0);
-
-            float phaseR = rayleighPhase(muClamped);
-            float phaseM = hgPhase(muClamped, MIE_G);
-
-            vec3 rayleighColor = vec3(0.06, 0.12, 0.35);
-            vec3 mieColor = vec3(0.25, 0.08, 0.02);
-
-            float redBoost = smoothstep(-0.2, 0.1, muClamped);
-            mieColor *= mix(0.3, 1.0, redBoost);
-
-            vec3 scatterColor = (rayleighColor * phaseR + mieColor * phaseM);
-
-            accumulatedGlow += glowStrength * scatterColor;
+    // Atmosphere glow
+    // Find closest planet intersection tNear
+    float closestPlanetT = 1e20;
+    for (int i = 0; i < PLANET_COUNT; ++i) {
+        float tNear, tFar;
+        if (raySphereIntersect(rayOrigin, rayDir, WorldPos[i], Radius[i], tNear, tFar)) {
+            if (tNear > 0.0 && tNear < closestPlanetT) {
+                closestPlanetT = tNear;
+            }
         }
+    }
 
-        accumulatedGlow *= 25.0;
-        finalColor += clamp(accumulatedGlow, vec3(0.0), vec3(1.0));
+    vec3 sunCenter = WorldPos[0];
+    float sunRadius = Radius[0];
+    float glowRadius = sunRadius * 1.2;
+
+    vec3 toSun = sunCenter - rayOrigin;
+    float tClosestSun = dot(toSun, rayDir);
+
+    if (tClosestSun > 0.0) {
+        vec3 closestPointSun = rayOrigin + rayDir * tClosestSun;
+        float distToSun = length(closestPointSun - sunCenter);
+
+        // Only add glow if the glow point is before any planet intersection (not occluded)
+        if (distToSun < glowRadius && distToSun > sunRadius && tClosestSun < closestPlanetT) {
+            float glowFactor = 1.0 - smoothstep(sunRadius, glowRadius, distToSun);
+            glowFactor = pow(glowFactor, 2.0);
+
+            vec3 glowColor = vec3(1.0, 0.8, 0.4);
+
+            finalColor += glowColor * glowFactor * 2.0;
+        }
+    }
+
+    for (int i = 1; i < PLANET_COUNT; ++i) {
+        vec3 planetCenter = WorldPos[i];
+        float radius = Radius[i];
+        float auraStrength = AuraStrength[i];
+        float auraFalloff = AuraFalloff[i];
+
+        vec3 toCenter = planetCenter - rayOrigin;
+        float tClosest = dot(toCenter, rayDir);
+
+        if (tClosest < 0.0) continue;
+
+        vec3 closestPoint = rayOrigin + rayDir * tClosest;
+        float distToCenter = length(closestPoint - planetCenter);
+        float atmosphereRadius = radius * 1.1;
+
+        if (distToCenter > radius && distToCenter < atmosphereRadius) {
+
+            // Occlusion check
+            bool occluded = false;
+            for (int j = 0; j < PLANET_COUNT; ++j) {
+                if (j == i) continue;
+                float tNearJ, tFarJ;
+                if (raySphereIntersect(rayOrigin, rayDir, WorldPos[j], Radius[j], tNearJ, tFarJ)) {
+                    if (tNearJ > 0.0 && tNearJ < tClosest) {
+                        occluded = true;
+                        break;
+                    }
+                }
+            }
+            if (occluded) continue;
+
+            float glowFactor = 1.0 - smoothstep(radius, atmosphereRadius, distToCenter);
+            glowFactor = pow(glowFactor, auraFalloff);
+
+            vec3 sunDir = normalize(SunPos - planetCenter);
+            vec3 viewDir = normalize(rayOrigin - planetCenter);
+            float cosTheta = dot(-viewDir, sunDir);
+
+            // Rayleigh scattering constants (blueish)
+            vec3 rayleighCoeff = AtmoColors[i];
+            float rPhase = rayleighPhase(cosTheta);
+
+            // Mie scattering constants (more warmish)
+            float g = 0.76;
+            float mPhase = miePhase(cosTheta, g);
+            vec3 mieCoeff = vec3(0.2, 0, 0);
+
+            vec3 scatter = auraStrength * glowFactor * (rayleighCoeff * rPhase + mieCoeff * mPhase);
+
+            // Scale down so it never blows out white
+            vec3 glow = clamp(scatter * 5, vec3(0.0), vec3(1.0));
+
+            finalColor += glow;
+        }
     }
 
     fragColor = vec4(finalColor, 1.0);
 }
+

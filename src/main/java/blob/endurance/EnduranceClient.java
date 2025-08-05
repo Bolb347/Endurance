@@ -20,6 +20,7 @@ public class EnduranceClient implements ClientModInitializer {
         ModDimensions.registerModDimensions();
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             InputHandler.updateRotation();
+            Planet.atmoColor.computeAtmoColors();
         });
         EntityRendererRegistry.register(ModEntities.SEAT_ENTITY, SeatEntityRenderer::new);
         VeilEventPlatform.INSTANCE.onVeilRenderLevelStage((stage, levelRenderer, bufferSource, matrixStack, frustumMatrix, projectionMatrix, renderTick, deltaTracker, camera, frustum) -> {
@@ -40,8 +41,8 @@ public class EnduranceClient implements ClientModInitializer {
                             },
                             new float[]{250, 49, 121, 127, 68, 630, 505, 311, 295, 12},
                             new float[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                            new float[]{5.0f, 2.0f, 2.0f, 1.0f, 1.0f, 0.5f, 0.5f, 0.5f, 0.2f, 0.2f},
-                            new float[]{0.1f, 0.2f, 0.5f, 0.7f, 0.8f, 1.0f, 1.0f, 2.0f, 3.0f, 4.0f},
+                            new float[]{0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f},
+                            new float[]{0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f},
                             new Vector3f(0, 400, 0)
                     );
                 }

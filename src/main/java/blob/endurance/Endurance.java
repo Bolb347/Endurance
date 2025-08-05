@@ -3,6 +3,7 @@ package blob.endurance;
 import blob.endurance.Block.ModBlocks;
 import blob.endurance.Item.ModItems;
 import blob.endurance.entities.ModEntities;
+import blob.endurance.render.Planet;
 import net.fabricmc.api.ModInitializer;
 
 import net.minecraft.util.math.BlockPos;
@@ -17,12 +18,7 @@ public class Endurance implements ModInitializer {
 	// It is considered best practice to use your mod id as the logger's name.
 	// That way, it's clear which mod wrote info, warnings, and errors.
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-	public static Vector3f shipPos = new Vector3f(0, 0, 0);
-	public static Vector3f shipPrevPos = new Vector3f(0, 0, 0);
-	public static Vector3f shipRot = new Vector3f(0, 0, 0);
-	public static Vector3f shipVel = new Vector3f(0, 0, 0);
 	public static float THRUSTER_POWER = 40000;
-	public static int THRUSTER_MAX_SPEED = 200;
 	public static BlockPos INV_POS = new BlockPos(0, -10000, 0);
 
 	@Override
