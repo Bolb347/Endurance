@@ -1,32 +1,47 @@
 package blob.endurance.entities;
 
-import blob.endurance.Endurance;
+import net.minecraft.block.Block;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import org.joml.Matrix3f;
+import org.joml.Vector3d;
+import org.joml.Vector3dc;
 import org.joml.Vector3f;
+import org.valkyrienskies.core.api.ships.LoadedServerShip;
 
 public class SeatEntity extends Entity {
     private final static float acceleration = 5f;
     private final static float maxSpeed = 100f;
     private final static float damping = 0.9f;
 
+    public Vector3f m_relMovementVector;
+    public LoadedServerShip m_parent;
+    public Vector3d m_pos;
+    public Direction m_dir;
+
     public SeatEntity(EntityType<? extends SeatEntity> type, World world) {
         super(type, world);
         this.noClip = false; // Make sure the entity is collidable
         this.setNoGravity(true); // If you don't want gravity, optional
+    }
+
+    public void bind(LoadedServerShip ship, BlockPos shipyardPos, Direction dir) {
+        m_parent = ship;
+        m_pos = new Vector3d(shipyardPos.toCenterPos().toVector3f());
+        m_dir = dir;
     }
 
     @Override
@@ -73,6 +88,15 @@ public class SeatEntity extends Entity {
         DataTracker dt = this.dataTracker;
         super.tick();
 
+        Vector3d newPos = m_parent.getShipToWorld().transformPosition(m_pos, new Vector3d(0, 0, 0));
+        setPosition(new Vec3d(newPos.x, newPos.y, newPos.z));
+        Vector3d newRotation = m_parent.getShipToWorld().transformDirection(new Vector3d(m_dir.getUnitVector()));
+        float yaw = (float) Math.toDegrees(Math.atan2(-newRotation.x, newRotation.z));
+        float pitch = (float) Math.toDegrees(Math.asin(-newRotation.y));
+        setRotation(yaw, pitch);
+
+        System.out.println(newPos);
+
         if (hasPassengers()) {
             Entity passenger = getFirstPassenger();
 
@@ -88,12 +112,33 @@ public class SeatEntity extends Entity {
             boolean back = clientPlayer.input.pressingBack;
             boolean left = clientPlayer.input.pressingLeft;
             boolean right = clientPlayer.input.pressingRight;
+
+            float x = 0;
+            float z = 0;
+
+            if (forward) z += 1f;
+            if (back)    z -= 1f;
+            if (left)    x += 1f;
+            if (right)   x -= 1f;
+
+            m_relMovementVector = new Vector3f(x, 0, z);
+
+            if (x == 0 && z == 0) {
+                return;
+            }
+
+            float yaw = getYaw();
+            double radians = Math.toRadians(-yaw);
+
+
+            m_relMovementVector.rotateY((float) radians);
+            m_relMovementVector.normalize();
         }
     }
 
     @Override
     public EntityDimensions getDimensions(EntityPose pose) {
-        return EntityDimensions.fixed(0.75f, 0.5f); // size of seat
+        return EntityDimensions.fixed(1f, 1f); // size of seat
     }
 
     @Override

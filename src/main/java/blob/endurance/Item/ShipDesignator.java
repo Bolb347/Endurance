@@ -1,5 +1,6 @@
 package blob.endurance.Item;
 import blob.endurance.Block.ModBlocks;
+import blob.endurance.Block.SeatBlock;
 import blob.endurance.Endurance;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.Item;
