@@ -1,6 +1,5 @@
 package blob.endurance.Item;
 import blob.endurance.Block.ModBlocks;
-import blob.endurance.Block.SeatBlock;
 import blob.endurance.Endurance;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.Item;
@@ -31,7 +30,7 @@ public class ShipDesignator extends Item {
         BlockPos pos1 = NbtHelper.getPosition(context.getStack(), "Pos1");
         BlockPos pos2 = NbtHelper.getPosition(context.getStack(), "Pos2");
         if (!(pos1.equals(Endurance.INV_POS) || pos2.equals(Endurance.INV_POS))) {
-            if (serverWorld.getBlockState(pos).getBlock() == ModBlocks.SEAT_BLOCK) {
+            if (serverWorld.getBlockState(pos).getBlock() == ModBlocks.CONTROLLER_BLOCK) {
                 //Build ship
                 System.out.println("Building ship");
                 List<BlockPos> blocks = new ArrayList<>();

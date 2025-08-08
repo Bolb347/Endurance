@@ -1,8 +1,7 @@
 package blob.endurance.vs;
 
 import blob.endurance.Endurance;
-import blob.endurance.entities.SeatEntity;
-import net.minecraft.block.FacingBlock;
+import blob.endurance.entities.ControllerEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
@@ -17,27 +16,27 @@ import org.valkyrienskies.mod.common.util.VectorConversionsMCKt;
 
 import java.util.ArrayList;
 
-public class SeatAttachment implements ShipForcesInducer {
+public class ControllerAttachment implements ShipForcesInducer {
     private ArrayList<BlockPos> m_seats = new ArrayList<>();
     private ArrayList<Direction> m_seats_rotations = new ArrayList<>();
 
     @Override
     public void applyForces(@NotNull PhysShip ship) {
         for (int i = 0; i < m_seats.size(); i ++ ) {
-            applySeatForce(ship, i);
+            applyControllerForce(ship, i);
         }
     }
 
     private Vector3f getVector(int index) {
         for (Entity entity : MinecraftClient.getInstance().world.getOtherEntities(null, new Box(m_seats.get(index)).expand(0.5))) {
-            if (entity instanceof SeatEntity seat) {
-                return seat.m_relMovementVector;
+            if (entity instanceof ControllerEntity controller) {
+                return controller.m_relMovementVector;
             }
         }
         return Endurance.INV_POS.toCenterPos().toVector3f();
     }
 
-    private void applySeatForce(PhysShip ship, int index) {
+    private void applyControllerForce(PhysShip ship, int index) {
         Vector3f relForceDir = getVector(index);
 
         Vector3d forceDir = new Vector3d(relForceDir);
@@ -58,12 +57,12 @@ public class SeatAttachment implements ShipForcesInducer {
         ship.applyInvariantForceToPos(forceDir, pos);
     }
 
-    public void attachSeat(BlockPos pos, Direction rotation) {
+    public void attachController(BlockPos pos, Direction rotation) {
         m_seats.add(pos);
         m_seats_rotations.add(rotation);
     }
 
-    public void removeSeat(BlockPos pos) {
+    public void removeController(BlockPos pos) {
         for (int i = 0; i < m_seats.size(); i ++) {
             if (pos == m_seats.get(i)) {
                 m_seats.remove(i);

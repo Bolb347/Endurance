@@ -3,7 +3,7 @@ package blob.endurance;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.Entity;
-import blob.endurance.entities.SeatEntity;
+import blob.endurance.entities.ControllerEntity;
 
 public class InputHandler {
     private static final MinecraftClient client = MinecraftClient.getInstance();
@@ -12,7 +12,7 @@ public class InputHandler {
         if (client.player == null) return;
 
         Entity vehicle = client.player.getVehicle();
-        if (!(vehicle instanceof SeatEntity)) {
+        if (!(vehicle instanceof ControllerEntity)) {
             return;
         }
 
