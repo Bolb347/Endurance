@@ -14,7 +14,7 @@ import net.minecraft.util.Identifier;
 
 public class ModBlocks {
     public static Block THRUSTER_BLOCK;
-    public static Block SEAT_BLOCK;
+    public static Block CONTROLLER_BLOCK;
 
     public static Block registerBlock(String name, Block block, RegistryKey<ItemGroup> group) {
         Identifier id = Identifier.of("endurance", name);
@@ -35,6 +35,6 @@ public class ModBlocks {
 
     public static void register() {
         THRUSTER_BLOCK = registerBlock("thruster", new ThrusterBlock(AbstractBlock.Settings.create()), ItemGroups.BUILDING_BLOCKS);
-        SEAT_BLOCK = registerBlock("seat", new ThrusterBlock(AbstractBlock.Settings.create()), ItemGroups.BUILDING_BLOCKS);
+        CONTROLLER_BLOCK = registerBlock("controller", new ControllerBlock(AbstractBlock.Settings.create()), ItemGroups.BUILDING_BLOCKS);
     }
 }
