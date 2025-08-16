@@ -33,7 +33,7 @@ public class ControllerAttachment implements ShipForcesInducer {
                 return controller.m_relMovementVector;
             }
         }
-        return Endurance.INV_POS.toCenterPos().toVector3f();
+        return new Vector3f(0);
     }
 
     private void applyControllerForce(PhysShip ship, int index) {

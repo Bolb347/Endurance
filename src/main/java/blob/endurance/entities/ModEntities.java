@@ -12,7 +12,7 @@ public class ModEntities {
             Registries.ENTITY_TYPE,
             Identifier.of("endurance", "seat_entity"),
             EntityType.Builder.<ControllerEntity>create(ControllerEntity::new, SpawnGroup.MISC)
-                    .dimensions(0.75f, 0.5f)
+                    .dimensions(0.5f, 0.5f)
                     .trackingTickInterval(10)
                     .build()
     );

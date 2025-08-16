@@ -27,6 +27,7 @@ public class ControllerEntity extends Entity {
         super(type, world);
         this.noClip = false; // Make sure the entity is collidable
         this.setNoGravity(true); // If you don't want gravity, optional
+        m_relMovementVector = new Vector3f(0, 0, 0);
     }
 
     public void bind(LoadedServerShip ship) {
@@ -61,15 +62,6 @@ public class ControllerEntity extends Entity {
     @Override
     public boolean shouldRender(double distance) {
         return true;
-    }
-
-    @Override
-    public ActionResult interact(PlayerEntity player, Hand hand) {
-        if (!getWorld().isClient) {
-            player.startRiding(this);
-            return ActionResult.SUCCESS;
-        }
-        return ActionResult.PASS;
     }
 
     @Override
@@ -109,15 +101,16 @@ public class ControllerEntity extends Entity {
             float yaw = getYaw();
             double radians = Math.toRadians(-yaw);
 
-
             m_relMovementVector.rotateY((float) radians);
             m_relMovementVector.normalize();
+
+            System.out.print(m_relMovementVector);
         }
     }
 
     @Override
     public EntityDimensions getDimensions(EntityPose pose) {
-        return EntityDimensions.fixed(1f, 1f); // size of seat
+        return EntityDimensions.fixed(0.5f, 0.5f); // size of seat
     }
 
     @Override
@@ -127,7 +120,7 @@ public class ControllerEntity extends Entity {
 
     @Override
     public boolean isCollidable() {
-        return true;
+        return false;
     }
 
     @Override

@@ -1,9 +1,9 @@
 package blob.endurance.Block;
 
+import blob.endurance.Endurance;
 import blob.endurance.entities.ModEntities;
 import blob.endurance.entities.ControllerEntity;
 import blob.endurance.vs.ControllerAttachment;
-import blob.endurance.vs.ThrusterAttachment;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -50,31 +50,37 @@ public class ControllerBlock extends HorizontalFacingBlock {
     @Override
     public void onPlaced(World world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack itemStack) {
         super.onPlaced(world, pos, state, placer, itemStack);
-        m_dir = state.get(Properties.HORIZONTAL_FACING);;
-        if (!world.isClient) {
-            LoadedServerShip m_owner = VSGameUtilsKt.getShipObjectManagingPos((ServerWorld) world, pos);
-            m_entity = new ControllerEntity(ModEntities.CONTROLLER_ENTITY, world);
-            m_entity.setPosition(pos.toCenterPos());
-            m_entity.setYaw(m_dir.asRotation());
-            m_entity.bind(m_owner);
-            if (VSGameUtilsKt.isBlockInShipyard(world, pos)) {
-                world.spawnEntity(m_entity);
-            }
-            m_attachment = m_owner.getAttachment(ControllerAttachment.class);
-            if (m_attachment == null) {
-                m_owner.saveAttachment(ThrusterAttachment.class, new ThrusterAttachment());
-                m_attachment = m_owner.getAttachment(ControllerAttachment.class);
-            }
-            if (m_attachment == null) {
-                return;
-            }
-            m_attachment.attachController(pos, m_dir);
-        }
+//        m_dir = state.get(Properties.HORIZONTAL_FACING);;
+//        if (!world.isClient) {
+//            LoadedServerShip m_owner = VSGameUtilsKt.getShipObjectManagingPos((ServerWorld) world, pos);
+//            if (m_owner != null) {
+//                m_entity = new ControllerEntity(ModEntities.CONTROLLER_ENTITY, world);
+//                m_entity.setPosition(pos.toCenterPos());
+//                m_entity.setYaw(m_dir.asRotation());
+//                m_entity.bind(m_owner);
+//                if (VSGameUtilsKt.isBlockInShipyard(world, pos)) {
+//                    world.spawnEntity(m_entity);
+//                    Endurance.CONTROLLERS.put(pos, m_entity);
+//                } else {
+//                    m_entity.discard();
+//                }
+//            }
+//            m_attachment = m_owner.getAttachment(ControllerAttachment.class);
+//            if (m_attachment == null) {
+//                m_owner.saveAttachment(ControllerAttachment.class, new ControllerAttachment());
+//                m_attachment = m_owner.getAttachment(ControllerAttachment.class);
+//            }
+//            if (m_attachment == null) {
+//                return;
+//            }
+//            m_attachment.attachController(pos, m_dir);
+//        }
     }
 
     @Override
     public void onBroken(WorldAccess world, BlockPos pos, BlockState state) {
         if (m_attachment != null) {
+            Endurance.CONTROLLERS.remove(pos);
             m_attachment.removeController(pos);
             m_entity.discard();
         }
