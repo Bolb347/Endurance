@@ -103,8 +103,6 @@ public class ControllerEntity extends Entity {
 
             m_relMovementVector.rotateY((float) radians);
             m_relMovementVector.normalize();
-
-            System.out.print(m_relMovementVector);
         }
     }
 
